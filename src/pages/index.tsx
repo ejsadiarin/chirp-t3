@@ -37,17 +37,19 @@ type PostWithUser = RouterOutputs["posts"]["getAll"][number];
 function PostView(props: PostWithUser) {
   const { post, author } = props;
   return (
-    <div key={post.id} className="flex flex-col gap-4 border-b border-slate-400 p-4">
-      <div className="flex items-center gap-3">
+    <article key={post.id} className="flex gap-4 border-b border-slate-400 p-4">
         <img
           src={author.profilePicture}
           alt="Picture"
           className="h-14 w-14 rounded-full"
         />
-        {author.username}
+      <div className="flex flex-col items-center gap-3">
+        <p className="flex text-slate-300">
+        {`@${author.username}`}
+        </p>
+        <p>{post.content}</p>
       </div>
-      <p>{post.content}</p>
-    </div>
+    </article>
   );
 }
 
