@@ -1,14 +1,64 @@
 import Head from "next/head";
 import Link from "next/link";
 
-import { api } from "@/utils/api";
-import { SignInButton, SignOutButton, UserButton, useUser } from "@clerk/nextjs";
+import { RouterOutputs, api } from "@/utils/api";
+import {
+  SignInButton,
+  SignOutButton,
+  UserButton,
+  useUser,
+} from "@clerk/nextjs";
+import { NextPage } from "next";
+
+function CreatePostWizard() {
+  const { user } = useUser();
+
+  console.log(user);
+
+  if (!user) return null;
+
+  return (
+    <div className="flex w-full gap-3">
+      <img
+        src={user.imageUrl}
+        alt="Profile image"
+        className="h-14 w-14 rounded-full"
+      />
+      <input
+        placeholder="Type something..."
+        className="grow bg-transparent outline-none"
+      />
+    </div>
+  );
+}
+
+type PostWithUser = RouterOutputs["posts"]["getAll"][number];
+
+function PostView(props: PostWithUser) {
+  const { post, author } = props;
+  return (
+    <div key={post.id} className="flex flex-col gap-4 border-b border-slate-400 p-4">
+      <div className="flex items-center gap-3">
+        <img
+          src={author.profilePicture}
+          alt="Picture"
+          className="h-14 w-14 rounded-full"
+        />
+        {author.username}
+      </div>
+      <p>{post.content}</p>
+    </div>
+  );
+}
 
 export default function Home() {
-
   const user = useUser();
 
-  const { data } = api.posts.getAll.useQuery();
+  const { data, isLoading } = api.posts.getAll.useQuery();
+
+  if (isLoading) return <p>Loading...</p>;
+
+  if (!data) return <p>Something went wrong</p>;
 
   return (
     <>
@@ -18,18 +68,21 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-        <div>
-          {/* optional since UserButton component does this already: */}
-          {user.isSignedIn ? <SignOutButton /> : <SignInButton />}
-        </div>
-        <UserButton />
-        <div>
-          {data?.map(post => (
-            <div key={post.id}>
-              {post.content}
-            </div>
-          ))}
+      <main className="flex h-screen justify-center">
+        <div className="h-full w-full border-x border-slate-400 md:max-w-2xl">
+          <div className="flex border-b border-slate-400 p-4">
+            {!user.isSignedIn && (
+              <div className="flex justify-center">
+                <SignInButton />
+              </div>
+            )}
+            {user.isSignedIn && <CreatePostWizard />}
+          </div>
+          <div>
+            {[...data, ...data]?.map((fullPost) => (
+              <PostView {...fullPost} key={fullPost.post.id} />
+            ))}
+          </div>
         </div>
       </main>
     </>
